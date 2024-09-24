@@ -72,21 +72,17 @@ to go
     output-type (word "Corridor width: " precision corridor-width 2 " \n\n")
     export-plot "Corridor Width" (word "butterfly_hilltopping_data/mate_finding/width_over_time_q_" q "_" index ".csv")
 
-    ;Ask each turtle how many others are within a specified radius.
-    let radius 5
-    let mate_counts [count other turtles in-radius radius] of turtles
-    let mean_mate_counts mean mate_counts ;This is the average # of mates for EACH butterfly.
+    ;
+;    output-type (word "Mean # mates accessible to individual: " precision mean mate_counts 1 "\n")
+;    output-type (word "Mean group size: " precision mean group_sizes 1 " individuals\n")
+;    output-type (word "(Radius equal to " radius ")")
 
-    ;Also find out the mean group size. Can use this by taking mate_counts and discarding repeat values.
-    let group_sizes reduce [
-      [?1 ?2] -> ifelse-value (not member? ?2 ?1) [lput ?2 ?1] [?1] ;If the next element is not a member of the list, add it. Otherwise just return the existing list.
-    ] fput [] mate_counts ;Start with an empty list and examine elements from mate_counts
-    let mean_group_size mean group_sizes + 1 ;The +1 is because the turtles are not counting themselves initially.
-
-    output-type (word "Mean # mates accessible to individual: " precision mean_mate_counts 1 "\n")
-    output-type (word "Mean group size: " precision mean_group_size 1 " individuals\n")
-    output-type (word "(Radius equal to " radius ")")
-
+    ;Write group sizes to a file, without brackets.
+;    file-open (word "butterfly_hilltopping_data/mate_finding/groups_q_" q "_" index ".txt")
+;    foreach group_sizes [i ->
+;      file-write i
+;    ]
+;    file-close
 
     stop
   ]
@@ -102,6 +98,22 @@ to move ; turtle procedure
     ;set pcolor red
   ]
 end
+
+to-report mate-counts
+  ;Ask each turtle how many others are within a specified radius
+  let radius 8
+  report [count other turtles in-radius radius] of turtles; Number of mates accessible to EACH butterfly.
+end
+
+; INVALID METHOD. Not every turtle in, say, a group of 30 will agree that it has 30 mates.
+;to-report group-collection
+;  ;Discard repeats in mate_counts
+;  let group_sizes reduce [
+;    [?1 ?2] -> ifelse-value (not member? ?2 ?1) [lput ?2 ?1] [?1] ;If the next element is not a member of the list, add it. Otherwise just return the existing list.
+;  ] fput [] mate-counts ;Start with an empty list and examine elements from mate_counts
+;  set group_sizes map [i -> i + 1] group_sizes ;The +1 is because the turtles are not counting themselves initially.
+;  report group_sizes
+;end
 
 ; Corridor width is defined as N/L where N is the total number of patches visited and L is the mean length from a butterfly's starting location to its destination.
 to-report corridor-width
@@ -180,7 +192,7 @@ q
 q
 0
 1
-0.8
+1.0
 0.1
 1
 NIL
@@ -579,6 +591,14 @@ NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="q_effect_on_avg_mates" repetitions="10" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>mean mate-counts</metric>
+    <steppedValueSet variable="q" first="0" step="0.1" last="1"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
